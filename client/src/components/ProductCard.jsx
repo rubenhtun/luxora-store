@@ -20,7 +20,7 @@ export default function ProductCard({ product }) {
         </button>
       </div>
 
-      <h3 className="mt-4 font-semibold text-lg">{product.title}</h3>
+      <h3 className="mt-4 font-semibold text-lg">{product.name}</h3>
       <p className="text-sm text-gray-500">({product.reviews} reviews)</p>
 
       <div className="mt-2">

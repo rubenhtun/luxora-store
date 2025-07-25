@@ -4,6 +4,8 @@ const productController = require("../controllers/productController");
 
 // Get all products
 router.get("/", productController.getAllProducts);
+// Add a new product
+router.post("/", productController.addProduct);
 
 // Add error handling middleware
 router.use((err, req, res, next) => {
