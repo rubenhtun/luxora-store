@@ -7,14 +7,18 @@ import {
   FiX,
   FiChevronLeft,
   FiChevronRight,
+  FiTag,
+  FiPackage,
+  FiDollarSign,
 } from "react-icons/fi";
 import axios from "axios";
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(10);
@@ -37,11 +41,12 @@ export default function Products() {
     images: [],
     category: "",
     features: [],
+    badges: [],
     shippingInfo: "",
     returnPolicy: "",
   });
 
-  // Fetch products on component mount and when search term changes
+  // Simulate API calls with mock data
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -53,32 +58,32 @@ export default function Products() {
         product.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProducts(results);
+    setCurrentPage(1); // Reset to first page when searching
   }, [searchTerm, products]);
 
+  // Fetch products from API
   const fetchProducts = async () => {
-    setIsLoading(true); // Show loading state
+    setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:3000/api/products");
-      setProducts(response.data);
-      setFilteredProducts(response.data);
-      setIsLoading(false); // After fetching data, hide loading state
+      const response = await axios.get(`${baseURL}/products`);
+      const data = response.data;
+      setProducts(data);
+      setFilteredProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   // Handle form submission for adding/editing products
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       if (isEditMode) {
-        await axios.put(
-          `http://localhost:3000/api/products/${selectedProductId}`,
-          formData
-        );
+        await axios.put(`${baseURL}/products/${selectedProductId}`, formData);
       } else {
-        await axios.post("http://localhost:3000/api/products", formData);
+        await axios.post(`${baseURL}/products`, formData);
       }
       fetchProducts();
       resetForm();
@@ -86,19 +91,21 @@ export default function Products() {
     } catch (error) {
       console.error("Error saving product:", error);
     }
+    setIsLoading(false);
   };
 
   // Handle delete confirmation
   const handleDelete = async () => {
+    setIsLoading(true);
     try {
-      await axios.delete(
-        `http://localhost:3000/api/products/${productToDelete}`
-      );
-      fetchProducts();
+      await axios.delete(`${baseURL}/products/${productToDelete}`);
+      const updatedProducts = products.filter((p) => p._id !== productToDelete);
+      setProducts(updatedProducts);
       setIsDeleteConfirmOpen(false);
     } catch (error) {
       console.error("Error deleting product:", error);
     }
+    setIsLoading(false);
   };
 
   // Reset form data
@@ -117,6 +124,7 @@ export default function Products() {
       images: [],
       category: "",
       features: [],
+      badges: [],
       shippingInfo: "",
       returnPolicy: "",
     });
@@ -140,6 +148,7 @@ export default function Products() {
       images: product.images || [],
       category: product.category || "",
       features: product.features || [],
+      badges: product.badges || [],
       shippingInfo: product.shippingInfo || "",
       returnPolicy: product.returnPolicy || "",
     });
@@ -159,34 +168,55 @@ export default function Products() {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  const getBadgeColor = (badge) => {
+    const colors = {
+      "Best Seller": "bg-gradient-to-r from-amber-400 to-orange-500 text-white",
+      New: "bg-gradient-to-r from-emerald-400 to-cyan-500 text-white",
+      Premium: "bg-gradient-to-r from-purple-500 to-pink-500 text-white",
+      Featured: "bg-gradient-to-r from-blue-500 to-indigo-600 text-white",
+      Professional: "bg-gradient-to-r from-gray-700 to-gray-900 text-white",
+      "Limited Edition": "bg-gradient-to-r from-red-500 to-pink-600 text-white",
+    };
+    return (
+      colors[badge] || "bg-gradient-to-r from-gray-400 to-gray-600 text-white"
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Product Management
-            </h1>
-            <p className="text-gray-600">Manage your product inventory</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+              <FiPackage className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                Product Management
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage your product inventory with ease
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <div className="relative flex-grow max-w-md">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search products or categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="pl-12 pr-12 py-3 w-full border-0 bg-white/70 backdrop-blur-sm rounded-xl shadow-md focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 placeholder-gray-500"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
                 >
-                  <FiX />
+                  <FiX className="w-5 h-5" />
                 </button>
               )}
             </div>
@@ -196,7 +226,7 @@ export default function Products() {
                 resetForm();
                 setIsModalOpen(true);
               }}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer font-medium"
             >
               <FiPlus className="w-5 h-5 mr-2" />
               Add Product
@@ -204,90 +234,139 @@ export default function Products() {
           </div>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">
+                  Total Products
+                </p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {products.length}
+                </p>
+              </div>
+              <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
+                <FiPackage className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">In Stock</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {products.filter((p) => p.inStock).length}
+                </p>
+              </div>
+              <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                <FiTag className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Value</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  $
+                  {products
+                    .reduce((sum, p) => sum + p.price * p.stockQuantity, 0)
+                    .toLocaleString()}
+                </p>
+              </div>
+              <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                <FiDollarSign className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Products Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-xl border border-white/20 overflow-hidden">
           {isLoading ? (
-            <div className="p-8 flex justify-center items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="p-12 flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+              <p className="text-gray-600 font-medium">Loading products...</p>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200/50">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Product
                       </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Category
                       </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Price
                       </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Stock
                       </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Badges
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white/50 divide-y divide-gray-200/30">
                     {currentProducts.length > 0 ? (
                       currentProducts.map((product) => (
                         <tr
                           key={product._id}
-                          className="hover:bg-gray-50 transition-colors"
+                          className="hover:bg-white/80 transition-all duration-200 group"
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10">
+                              <div className="flex-shrink-0 h-12 w-12">
                                 <img
                                   src={
                                     product.image ||
-                                    "https://via.placeholder.com/40"
+                                    "https://via.placeholder.com/48"
                                   }
                                   alt={product.name}
-                                  className="h-10 w-10 rounded-md object-cover"
+                                  className="h-12 w-12 rounded-xl object-cover shadow-md group-hover:shadow-lg transition-shadow duration-200"
                                   onError={(e) => {
                                     e.target.src =
-                                      "https://via.placeholder.com/40";
+                                      "https://via.placeholder.com/48";
                                   }}
                                 />
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
                                   {product.name}
                                 </div>
                                 <div className="text-sm text-gray-500 truncate max-w-xs">
                                   {product.description}
                                 </div>
+                                {product.rating > 0 && (
+                                  <div className="flex items-center mt-1">
+                                    <div className="flex text-yellow-400">
+                                      {"★".repeat(Math.floor(product.rating))}
+                                    </div>
+                                    <span className="text-xs text-gray-500 ml-1">
+                                      {product.rating} ({product.reviews})
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200">
                               {product.category || "Uncategorized"}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900 font-medium">
+                            <div className="text-sm text-gray-900 font-bold">
                               ${product.price.toFixed(2)}
                             </div>
                             {product.originalPrice > product.price && (
@@ -299,25 +378,46 @@ export default function Products() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div
-                                className={`h-2.5 w-2.5 rounded-full mr-2 ${
+                                className={`h-3 w-3 rounded-full mr-2 shadow-sm ${
                                   product.inStock
-                                    ? "bg-green-500"
-                                    : "bg-red-500"
+                                    ? "bg-green-400"
+                                    : "bg-red-400"
                                 }`}
                               ></div>
-                              <span className="text-sm text-gray-900">
+                              <span className="text-sm text-gray-900 font-medium">
                                 {product.inStock
-                                  ? `In Stock (${product.stockQuantity})`
+                                  ? `${product.stockQuantity} units`
                                   : "Out of Stock"}
                               </span>
                             </div>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-wrap gap-1">
+                              {product.badges
+                                ?.slice(0, 2)
+                                .map((badge, index) => (
+                                  <span
+                                    key={index}
+                                    className={`px-2 py-1 text-xs font-bold rounded-lg shadow-sm ${getBadgeColor(
+                                      badge
+                                    )}`}
+                                  >
+                                    {badge}
+                                  </span>
+                                ))}
+                              {product.badges?.length > 2 && (
+                                <span className="px-2 py-1 text-xs font-medium rounded-lg bg-gray-200 text-gray-600">
+                                  +{product.badges.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex justify-end space-x-3">
+                            <div className="flex justify-end space-x-2">
                               <button
                                 onClick={() => handleEdit(product)}
-                                className="text-blue-600 hover:text-blue-900 transition-colors"
-                                title="Edit"
+                                className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
+                                title="Edit Product"
                               >
                                 <FiEdit2 className="w-5 h-5" />
                               </button>
@@ -326,8 +426,8 @@ export default function Products() {
                                   setProductToDelete(product._id);
                                   setIsDeleteConfirmOpen(true);
                                 }}
-                                className="text-red-600 hover:text-red-900 transition-colors"
-                                title="Delete"
+                                className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
+                                title="Delete Product"
                               >
                                 <FiTrash2 className="w-5 h-5" />
                               </button>
@@ -337,13 +437,15 @@ export default function Products() {
                       ))
                     ) : (
                       <tr>
-                        <td
-                          colSpan="5"
-                          className="px-6 py-4 text-center text-gray-500"
-                        >
-                          {searchTerm
-                            ? "No products match your search."
-                            : "No products available."}
+                        <td colSpan="6" className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center">
+                            <FiPackage className="w-16 h-16 text-gray-300 mb-4" />
+                            <p className="text-gray-500 font-medium">
+                              {searchTerm
+                                ? "No products match your search."
+                                : "No products available. Add your first product!"}
+                            </p>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -353,14 +455,14 @@ export default function Products() {
 
               {/* Pagination */}
               {filteredProducts.length > productsPerPage && (
-                <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200/50 bg-gray-50/50">
                   <div className="flex-1 flex justify-between sm:hidden">
                     <button
                       onClick={() =>
                         paginate(currentPage > 1 ? currentPage - 1 : 1)
                       }
                       disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       Previous
                     </button>
@@ -373,45 +475,41 @@ export default function Products() {
                         )
                       }
                       disabled={currentPage === totalPages}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       Next
                     </button>
                   </div>
                   <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-gray-700 font-medium">
                         Showing{" "}
-                        <span className="font-medium">
+                        <span className="font-bold text-gray-900">
                           {indexOfFirstProduct + 1}
                         </span>{" "}
                         to{" "}
-                        <span className="font-medium">
+                        <span className="font-bold text-gray-900">
                           {Math.min(
                             indexOfLastProduct,
                             filteredProducts.length
                           )}
                         </span>{" "}
                         of{" "}
-                        <span className="font-medium">
+                        <span className="font-bold text-gray-900">
                           {filteredProducts.length}
                         </span>{" "}
                         results
                       </p>
                     </div>
                     <div>
-                      <nav
-                        className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                        aria-label="Pagination"
-                      >
+                      <nav className="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px">
                         <button
                           onClick={() =>
                             paginate(currentPage > 1 ? currentPage - 1 : 1)
                           }
                           disabled={currentPage === 1}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
                         >
-                          <span className="sr-only">Previous</span>
                           <FiChevronLeft className="h-5 w-5" />
                         </button>
                         {Array.from(
@@ -421,9 +519,9 @@ export default function Products() {
                           <button
                             key={number}
                             onClick={() => paginate(number)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium cursor-pointer transition-colors ${
                               currentPage === number
-                                ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                                ? "z-10 bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-500 text-white shadow-md"
                                 : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
                             }`}
                           >
@@ -439,9 +537,8 @@ export default function Products() {
                             )
                           }
                           disabled={currentPage === totalPages}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
                         >
-                          <span className="sr-only">Next</span>
                           <FiChevronRight className="h-5 w-5" />
                         </button>
                       </nav>
@@ -456,11 +553,11 @@ export default function Products() {
 
       {/* Add/Edit Product Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-white/20">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                   {isEditMode ? "Edit Product" : "Add New Product"}
                 </h2>
                 <button
@@ -468,45 +565,37 @@ export default function Products() {
                     setIsModalOpen(false);
                     resetForm();
                   }}
-                  className="text-gray-400 hover:text-gray-500 cursor-pointer"
+                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer"
                 >
                   <FiX className="h-6 w-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Product Name */}
-                  <div className="col-span-2">
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Product Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      id="name"
                       placeholder="Enter product name"
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       required
                     />
                   </div>
 
                   {/* Description */}
-                  <div className="col-span-2">
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      id="description"
                       placeholder="Enter product description"
                       value={formData.description}
                       onChange={(e) =>
@@ -515,7 +604,7 @@ export default function Products() {
                           description: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       rows={3}
                       required
                     />
@@ -523,15 +612,11 @@ export default function Products() {
 
                   {/* Price Fields */}
                   <div>
-                    <label
-                      htmlFor="price"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Price ($) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
-                      id="price"
                       placeholder="0.00"
                       value={formData.price}
                       onChange={(e) =>
@@ -540,22 +625,18 @@ export default function Products() {
                           price: parseFloat(e.target.value) || 0,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
                       step="0.01"
                       required
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="originalPrice"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Original Price ($)
                     </label>
                     <input
                       type="number"
-                      id="originalPrice"
                       placeholder="0.00"
                       value={formData.originalPrice}
                       onChange={(e) =>
@@ -564,7 +645,7 @@ export default function Products() {
                           originalPrice: parseFloat(e.target.value) || 0,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
                       step="0.01"
                     />
@@ -572,15 +653,11 @@ export default function Products() {
 
                   {/* Rating & Reviews */}
                   <div>
-                    <label
-                      htmlFor="rating"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Rating
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Rating (0-5)
                     </label>
                     <input
                       type="number"
-                      id="rating"
                       placeholder="0.0"
                       value={formData.rating}
                       onChange={(e) =>
@@ -589,22 +666,18 @@ export default function Products() {
                           rating: parseFloat(e.target.value) || 0,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
                       max="5"
                       step="0.1"
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="reviews"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Reviews Count
                     </label>
                     <input
                       type="number"
-                      id="reviews"
                       placeholder="0"
                       value={formData.reviews}
                       onChange={(e) =>
@@ -613,41 +686,33 @@ export default function Products() {
                           reviews: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
                     />
                   </div>
 
                   {/* Category & Stock */}
                   <div>
-                    <label
-                      htmlFor="category"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Category <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      id="category"
                       placeholder="Enter category"
                       value={formData.category}
                       onChange={(e) =>
                         setFormData({ ...formData, category: e.target.value })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       required
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="stockQuantity"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Stock Quantity
                     </label>
                     <input
                       type="number"
-                      id="stockQuantity"
                       placeholder="100"
                       value={formData.stockQuantity}
                       onChange={(e) =>
@@ -656,20 +721,17 @@ export default function Products() {
                           stockQuantity: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
                     />
                   </div>
 
                   {/* In Stock Toggle */}
-                  <div className="flex items-center">
-                    <label
-                      htmlFor="inStock"
-                      className="block text-sm font-medium text-gray-700 mr-3"
-                    >
+                  <div className="flex items-center space-x-4">
+                    <label className="block text-sm font-bold text-gray-700">
                       In Stock
                     </label>
-                    <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                    <div className="relative">
                       <input
                         type="checkbox"
                         id="inStock"
@@ -680,32 +742,40 @@ export default function Products() {
                             inStock: e.target.checked,
                           })
                         }
-                        className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out"
+                        className="sr-only"
                       />
                       <label
                         htmlFor="inStock"
-                        className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
-                          formData.inStock ? "bg-blue-600" : "bg-gray-300"
+                        className={`block w-14 h-8 rounded-full cursor-pointer transition-all duration-300 ${
+                          formData.inStock
+                            ? "bg-gradient-to-r from-green-400 to-green-600 shadow-lg shadow-green-200"
+                            : "bg-gray-300"
                         }`}
-                      ></label>
+                      >
+                        <div
+                          className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 shadow-md ${
+                            formData.inStock ? "transform translate-x-6" : ""
+                          }`}
+                        />
+                      </label>
                     </div>
-                    <span className="text-sm text-gray-700">
-                      {formData.inStock ? "Yes" : "No"}
+                    <span
+                      className={`text-sm font-medium ${
+                        formData.inStock ? "text-green-600" : "text-gray-500"
+                      }`}
+                    >
+                      {formData.inStock ? "Available" : "Out of Stock"}
                     </span>
                   </div>
 
                   {/* Colors */}
-                  <div className="col-span-2">
-                    <label
-                      htmlFor="colors"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Colors (comma separated)
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Available Colors
                     </label>
                     <input
                       type="text"
-                      id="colors"
-                      placeholder="red, blue, green"
+                      placeholder="red, blue, green, black"
                       value={formData.colors.join(", ")}
                       onChange={(e) =>
                         setFormData({
@@ -716,14 +786,14 @@ export default function Products() {
                             .filter((color) => color !== ""),
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                     />
                     {formData.colors.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {formData.colors.map((color, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"
+                            className="px-3 py-1 text-sm font-medium rounded-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-300 shadow-sm"
                           >
                             {color}
                           </span>
@@ -732,18 +802,50 @@ export default function Products() {
                     )}
                   </div>
 
-                  {/* Features */}
-                  <div className="col-span-2">
-                    <label
-                      htmlFor="features"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Features (comma separated)
+                  {/* Badges */}
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Product Badges
                     </label>
                     <input
                       type="text"
-                      id="features"
-                      placeholder="Wireless, Noise Cancelling, Bluetooth"
+                      placeholder="Best Seller, New, Premium, Featured"
+                      value={formData.badges.join(", ")}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          badges: e.target.value
+                            .split(",")
+                            .map((badge) => badge.trim())
+                            .filter((badge) => badge !== ""),
+                        })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
+                    />
+                    {formData.badges.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {formData.badges.map((badge, index) => (
+                          <span
+                            key={index}
+                            className={`px-3 py-1 text-sm font-bold rounded-lg shadow-sm ${getBadgeColor(
+                              badge
+                            )}`}
+                          >
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Features */}
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Key Features
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Wireless, Noise Cancelling, Bluetooth 5.0"
                       value={formData.features.join(", ")}
                       onChange={(e) =>
                         setFormData({
@@ -754,14 +856,14 @@ export default function Products() {
                             .filter((f) => f !== ""),
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                     />
                     {formData.features.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {formData.features.map((feature, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"
+                            className="px-3 py-1 text-sm font-medium rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 shadow-sm"
                           >
                             {feature}
                           </span>
@@ -771,31 +873,27 @@ export default function Products() {
                   </div>
 
                   {/* Image URL */}
-                  <div className="col-span-2">
-                    <label
-                      htmlFor="image"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Main Image URL
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Product Image URL
                     </label>
                     <input
                       type="text"
-                      id="image"
                       placeholder="https://example.com/image.jpg"
                       value={formData.image}
                       onChange={(e) =>
                         setFormData({ ...formData, image: e.target.value })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                     />
                     {formData.image && (
-                      <div className="mt-2">
+                      <div className="mt-3">
                         <img
                           src={formData.image}
                           alt="Preview"
-                          className="h-20 w-20 object-cover rounded-md border border-gray-200"
+                          className="h-24 w-24 object-cover rounded-xl border-2 border-gray-200 shadow-md"
                           onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/80";
+                            e.target.src = "https://via.placeholder.com/96";
                           }}
                         />
                       </div>
@@ -803,16 +901,12 @@ export default function Products() {
                   </div>
 
                   {/* Shipping Info */}
-                  <div className="col-span-2">
-                    <label
-                      htmlFor="shippingInfo"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Shipping Information
                     </label>
                     <textarea
-                      id="shippingInfo"
-                      placeholder="Enter shipping details"
+                      placeholder="Free shipping on orders over $50"
                       value={formData.shippingInfo}
                       onChange={(e) =>
                         setFormData({
@@ -820,22 +914,18 @@ export default function Products() {
                           shippingInfo: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       rows={2}
                     />
                   </div>
 
                   {/* Return Policy */}
-                  <div className="col-span-2">
-                    <label
-                      htmlFor="returnPolicy"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Return Policy
                     </label>
                     <textarea
-                      id="returnPolicy"
-                      placeholder="Enter return policy details"
+                      placeholder="30-day return policy with free returns"
                       value={formData.returnPolicy}
                       onChange={(e) =>
                         setFormData({
@@ -843,29 +933,39 @@ export default function Products() {
                           returnPolicy: e.target.value,
                         })
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       rows={2}
                     />
                   </div>
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={() => {
                       setIsModalOpen(false);
                       resetForm();
                     }}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                    className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors cursor-pointer hover:bg-gray-100 rounded-xl"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+                    disabled={isLoading}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    {isEditMode ? "Update Product" : "Add Product"}
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                        {isEditMode ? "Updating..." : "Adding..."}
+                      </div>
+                    ) : isEditMode ? (
+                      "Update Product"
+                    ) : (
+                      "Add Product"
+                    )}
                   </button>
                 </div>
               </form>
@@ -876,35 +976,48 @@ export default function Products() {
 
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-md border border-white/20">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">
                 Confirm Deletion
               </h2>
               <button
                 onClick={() => setIsDeleteConfirmOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer"
               >
                 <FiX className="h-6 w-6" />
               </button>
             </div>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this product? This action cannot
-              be undone.
-            </p>
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-red-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiTrash2 className="w-8 h-8 text-red-500" />
+              </div>
+              <p className="text-gray-600 text-center">
+                Are you sure you want to delete this product? This action cannot
+                be undone and will permanently remove all product data.
+              </p>
+            </div>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setIsDeleteConfirmOpen(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium hover:bg-gray-100 rounded-xl transition-all duration-200 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                disabled={isLoading}
+                className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Delete Product
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </div>
+                ) : (
+                  "Delete Product"
+                )}
               </button>
             </div>
           </div>
