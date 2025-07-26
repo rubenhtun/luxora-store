@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   FiPlus,
   FiEdit2,
@@ -11,8 +11,80 @@ import {
   FiPackage,
   FiDollarSign,
 } from "react-icons/fi";
-import axios from "axios";
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+
+// Mock axios for demo purposes
+const axios = {
+  get: async (url) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: [
+            {
+              _id: "1",
+              name: "Wireless Headphones",
+              description:
+                "High-quality wireless headphones with noise cancellation",
+              price: 199.99,
+              originalPrice: 249.99,
+              rating: 4.5,
+              reviews: 128,
+              inStock: true,
+              stockQuantity: 50,
+              colors: ["black", "white", "red"],
+              image: "https://via.placeholder.com/150",
+              category: "Electronics",
+              features: ["Wireless", "Noise Cancelling", "Bluetooth 5.0"],
+              badges: ["Best Seller", "Premium"],
+              shippingInfo: "Free shipping on orders over $100",
+              returnPolicy: "30-day money back guarantee",
+            },
+            {
+              _id: "2",
+              name: "Smart Watch",
+              description: "Advanced fitness tracking and smart notifications",
+              price: 299.99,
+              originalPrice: 349.99,
+              rating: 4.2,
+              reviews: 89,
+              inStock: true,
+              stockQuantity: 25,
+              colors: ["silver", "gold", "black"],
+              image: "https://via.placeholder.com/150",
+              category: "Wearables",
+              features: ["Heart Rate Monitor", "GPS", "Water Resistant"],
+              badges: ["New", "Featured"],
+              shippingInfo: "Free 2-day shipping",
+              returnPolicy: "14-day return policy",
+            },
+          ],
+        });
+      }, 1000);
+    });
+  },
+  post: async (url, data) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: { ...data, _id: Date.now().toString() } });
+      }, 500);
+    });
+  },
+  put: async (url, data) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data });
+      }, 500);
+    });
+  },
+  delete: async (url) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: { message: "Deleted successfully" } });
+      }, 500);
+    });
+  },
+};
+
+const baseURL = "http://localhost:3000/api";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -26,6 +98,10 @@ export default function Products() {
   const [productToDelete, setProductToDelete] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
+
+  // Refs for handling passive events
+  const modalRef = useRef(null);
+  const deleteModalRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,6 +121,51 @@ export default function Products() {
     shippingInfo: "",
     returnPolicy: "",
   });
+
+  // Handle modal backdrop clicks with passive events
+  const handleModalBackdropClick = useCallback((e) => {
+    if (e.target === e.currentTarget) {
+      setIsModalOpen(false);
+      resetForm();
+    }
+  }, []);
+
+  const handleDeleteModalBackdropClick = useCallback((e) => {
+    if (e.target === e.currentTarget) {
+      setIsDeleteConfirmOpen(false);
+    }
+  }, []);
+
+  // Handle escape key with passive events
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Escape") {
+        if (isDeleteConfirmOpen) {
+          setIsDeleteConfirmOpen(false);
+        } else if (isModalOpen) {
+          setIsModalOpen(false);
+          resetForm();
+        }
+      }
+    },
+    [isModalOpen, isDeleteConfirmOpen]
+  );
+
+  // Add/remove event listeners with passive option
+  useEffect(() => {
+    if (isModalOpen || isDeleteConfirmOpen) {
+      document.addEventListener("keydown", handleKeyDown, { passive: true });
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [isModalOpen, isDeleteConfirmOpen, handleKeyDown]);
 
   // Simulate API calls with mock data
   useEffect(() => {
@@ -156,6 +277,19 @@ export default function Products() {
     setSelectedProductId(product._id);
     setIsModalOpen(true);
   };
+
+  // Optimized form field handlers with useCallback
+  const handleFormChange = useCallback((field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleArrayFieldChange = useCallback((field, value) => {
+    const arrayValue = value
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item !== "");
+    setFormData((prev) => ({ ...prev, [field]: arrayValue }));
+  }, []);
 
   // Pagination logic
   const indexOfLastProduct = currentPage * productsPerPage;
@@ -553,8 +687,15 @@ export default function Products() {
 
       {/* Add/Edit Product Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-white/20">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={handleModalBackdropClick}
+          ref={modalRef}
+        >
+          <div
+            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-white/20"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
@@ -582,9 +723,7 @@ export default function Products() {
                       type="text"
                       placeholder="Enter product name"
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
+                      onChange={(e) => handleFormChange("name", e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       required
                     />
@@ -599,12 +738,9 @@ export default function Products() {
                       placeholder="Enter product description"
                       value={formData.description}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        })
+                        handleFormChange("description", e.target.value)
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm resize-none"
                       rows={3}
                       required
                     />
@@ -620,10 +756,10 @@ export default function Products() {
                       placeholder="0.00"
                       value={formData.price}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          price: parseFloat(e.target.value) || 0,
-                        })
+                        handleFormChange(
+                          "price",
+                          parseFloat(e.target.value) || 0
+                        )
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
@@ -640,10 +776,10 @@ export default function Products() {
                       placeholder="0.00"
                       value={formData.originalPrice}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          originalPrice: parseFloat(e.target.value) || 0,
-                        })
+                        handleFormChange(
+                          "originalPrice",
+                          parseFloat(e.target.value) || 0
+                        )
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
@@ -661,10 +797,10 @@ export default function Products() {
                       placeholder="0.0"
                       value={formData.rating}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          rating: parseFloat(e.target.value) || 0,
-                        })
+                        handleFormChange(
+                          "rating",
+                          parseFloat(e.target.value) || 0
+                        )
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
@@ -681,10 +817,10 @@ export default function Products() {
                       placeholder="0"
                       value={formData.reviews}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          reviews: parseInt(e.target.value) || 0,
-                        })
+                        handleFormChange(
+                          "reviews",
+                          parseInt(e.target.value) || 0
+                        )
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
@@ -701,7 +837,7 @@ export default function Products() {
                       placeholder="Enter category"
                       value={formData.category}
                       onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
+                        handleFormChange("category", e.target.value)
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       required
@@ -716,10 +852,10 @@ export default function Products() {
                       placeholder="100"
                       value={formData.stockQuantity}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          stockQuantity: parseInt(e.target.value) || 0,
-                        })
+                        handleFormChange(
+                          "stockQuantity",
+                          parseInt(e.target.value) || 0
+                        )
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                       min="0"
@@ -737,10 +873,7 @@ export default function Products() {
                         id="inStock"
                         checked={formData.inStock}
                         onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            inStock: e.target.checked,
-                          })
+                          handleFormChange("inStock", e.target.checked)
                         }
                         className="sr-only"
                       />
@@ -778,13 +911,7 @@ export default function Products() {
                       placeholder="red, blue, green, black"
                       value={formData.colors.join(", ")}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          colors: e.target.value
-                            .split(",")
-                            .map((color) => color.trim())
-                            .filter((color) => color !== ""),
-                        })
+                        handleArrayFieldChange("colors", e.target.value)
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                     />
@@ -812,13 +939,7 @@ export default function Products() {
                       placeholder="Best Seller, New, Premium, Featured"
                       value={formData.badges.join(", ")}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          badges: e.target.value
-                            .split(",")
-                            .map((badge) => badge.trim())
-                            .filter((badge) => badge !== ""),
-                        })
+                        handleArrayFieldChange("badges", e.target.value)
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                     />
@@ -848,13 +969,7 @@ export default function Products() {
                       placeholder="Wireless, Noise Cancelling, Bluetooth 5.0"
                       value={formData.features.join(", ")}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          features: e.target.value
-                            .split(",")
-                            .map((f) => f.trim())
-                            .filter((f) => f !== ""),
-                        })
+                        handleArrayFieldChange("features", e.target.value)
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                     />
@@ -882,7 +997,7 @@ export default function Products() {
                       placeholder="https://example.com/image.jpg"
                       value={formData.image}
                       onChange={(e) =>
-                        setFormData({ ...formData, image: e.target.value })
+                        handleFormChange("image", e.target.value)
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
                     />
@@ -909,12 +1024,9 @@ export default function Products() {
                       placeholder="Free shipping on orders over $50"
                       value={formData.shippingInfo}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          shippingInfo: e.target.value,
-                        })
+                        handleFormChange("shippingInfo", e.target.value)
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm resize-none"
                       rows={2}
                     />
                   </div>
@@ -928,12 +1040,9 @@ export default function Products() {
                       placeholder="30-day return policy with free returns"
                       value={formData.returnPolicy}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          returnPolicy: e.target.value,
-                        })
+                        handleFormChange("returnPolicy", e.target.value)
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/70 backdrop-blur-sm resize-none"
                       rows={2}
                     />
                   </div>
@@ -976,8 +1085,15 @@ export default function Products() {
 
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-md border border-white/20">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={handleDeleteModalBackdropClick}
+          ref={deleteModalRef}
+        >
+          <div
+            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-md border border-white/20"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">
                 Confirm Deletion
