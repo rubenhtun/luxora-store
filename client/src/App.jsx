@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Header from "./components/Header";
-import MainNav from "./components/MainNav";
-import NavCategories from "./components/NavCategories";
-import Banner from "./components/Banner";
+import Header from "./components/landing/Header";
+import MainNav from "./components/landing/MainNav";
+import NavCategories from "./components/landing/NavCategories";
+import Banner from "./components/landing/Banner";
+import ProductsList from "./components/landing/ProductLists";
 import Footer from "./components/Footer";
 import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -10,7 +11,6 @@ import Products from "./pages/admin/Products";
 import Orders from "./pages/admin/Orders";
 import Customers from "./pages/admin/Customers";
 import Settings from "./pages/admin/Settings";
-import ProductsList from "./components/ProductLists";
 
 function App() {
   return (
