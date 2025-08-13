@@ -4,7 +4,7 @@ import MainNav from "./components/landing/MainNav";
 import NavCategories from "./components/landing/NavCategories";
 import Banner from "./components/landing/Banner";
 import ProductsList from "./components/landing/ProductLists";
-import Footer from "./components/Footer";
+import Footer from "./components/landing/Footer";
 import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";

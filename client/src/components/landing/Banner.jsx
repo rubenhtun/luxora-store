@@ -35,7 +35,7 @@ export default function Banner() {
           </p>
           <a
             href="/shop"
-            className="inline-flex items-center px-6 py-3 bg-blue-500 text-white rounded-md font-semibold text-sm sm:text-base hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md font-semibold text-sm hover:bg-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
             aria-label={bannerContent.cta}
           >
             <FiShoppingBag className="w-4 h-4 mr-2" />
