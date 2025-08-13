@@ -60,24 +60,14 @@ const productSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      validate: {
-        validator: function (v) {
-          return /^(https?:\/\/).+\.(jpg|jpeg|png|webp|gif)$/i.test(v);
-        },
-        message: "Please provide a valid image URL",
-      },
+      required: [true, "Product image is required"],
+      trim: true,
+      maxlength: [2000, "Image URL cannot exceed 2000 characters"],
     },
+
     images: {
       type: [String],
       default: [],
-      validate: {
-        validator: function (v) {
-          return v.every((img) =>
-            /^(https?:\/\/).+\.(jpg|jpeg|png|webp|gif)$/i.test(img)
-          );
-        },
-        message: "Please provide valid image URLs",
-      },
     },
     category: {
       type: String,
@@ -116,6 +106,7 @@ const productSchema = new mongoose.Schema(
       maxlength: [500, "Return policy cannot exceed 500 characters"],
     },
   },
+  // Schema options: enable timestamps (createdAt, updatedAt) and include virtual fields in JSON and plain object outputs
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 

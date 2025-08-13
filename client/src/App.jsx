@@ -20,7 +20,7 @@ function App() {
         <Route
           path="/"
           element={
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-white">
               <Header />
               <MainNav />
               <NavCategories />
