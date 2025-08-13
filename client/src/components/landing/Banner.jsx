@@ -1,4 +1,5 @@
 import { FiShoppingBag, FiArrowRight } from "react-icons/fi";
+import banner from "../../assets/images/banner/banner.png";
 
 // Hero banner component for the landing page, showcasing a full-width promotional section
 // Uses a responsive layout with Tailwind CSS, aligning text with the first menu category
@@ -7,14 +8,13 @@ export default function Banner() {
   const bannerContent = {
     title: "Summer Luxury Collection",
     subtitle: "Discover exclusive premium pieces crafted for discerning taste",
-    image:
-      "https://static.beautytocare.com/cdn-cgi/image/width=576,height=402,fit=crop,f=auto/media/content/blogarticles/articles/best-luxury-skincare-mature-skin.jpg",
+    image: banner,
     cta: "Shop Collection",
   };
 
   return (
     // Main banner container with full-width and fixed height
-    <section className="w-full h-[400px] overflow-hidden">
+    <section className="w-full h-[450px] overflow-hidden">
       {/* Hero content with full-width background image */}
       <div className="relative flex items-center justify-center md:justify-end h-full">
         {/* Background image with subtle overlay */}

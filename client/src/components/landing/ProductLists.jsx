@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { FiChevronDown } from "react-icons/fi";
-import ProductCard from "../ProductCard";
+import ProductCard from "./ProductCard";
 
 // ProductsList component for displaying and filtering products
 // Uses responsive Tailwind CSS layout and axios for fetching data
@@ -151,7 +151,7 @@ export default function ProductsList() {
 
   return (
     // Main container with responsive padding and centered layout
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-0 py-8">
       {/* Breadcrumb navigation */}
       <div className="text-sm text-slate-500 mb-6">
         <a href="/" className="text-blue-600 hover:underline">
