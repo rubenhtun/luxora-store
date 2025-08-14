@@ -60,11 +60,9 @@ const productSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      required: [true, "Product image is required"],
       trim: true,
       maxlength: [2000, "Image URL cannot exceed 2000 characters"],
     },
-
     images: {
       type: [String],
       default: [],

@@ -1,16 +1,24 @@
+// Third-party libraries
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// Internal components
+import AdminLayout from "./components/admin/AdminLayout";
+import Banner from "./components/landing/Banner";
+import Footer from "./components/landing/Footer";
 import Header from "./components/landing/Header";
 import MainNav from "./components/landing/MainNav";
 import NavCategories from "./components/landing/NavCategories";
-import Banner from "./components/landing/Banner";
 import ProductsList from "./components/landing/ProductLists";
-import Footer from "./components/landing/Footer";
-import AdminLayout from "./components/admin/AdminLayout";
-import Dashboard from "./pages/admin/Dashboard";
-import Products from "./pages/admin/Products";
-import Orders from "./pages/admin/Orders";
+
+// Internal pages
 import Customers from "./pages/admin/Customers";
+import Dashboard from "./pages/admin/Dashboard";
+import Orders from "./pages/admin/Orders";
+import Products from "./pages/admin/Products";
 import Settings from "./pages/admin/Settings";
+import AddNewProduct from "./pages/admin/AddNewProduct";
 
 function App() {
   return (
@@ -38,8 +46,10 @@ function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="customers" element={<Customers />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="add-new-product" element={<AddNewProduct />} />
         </Route>
       </Routes>
+      <ToastContainer />
     </BrowserRouter>
   );
 }

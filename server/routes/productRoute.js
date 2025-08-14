@@ -6,6 +6,8 @@ const productController = require("../controllers/productController");
 router.get("/", productController.getAllProducts);
 // Add a new product
 router.post("/", productController.addProduct);
+// Delete a product
+router.delete("/:id", productController.deleteProduct);
 
 // Add error handling middleware
 router.use((err, req, res, next) => {
