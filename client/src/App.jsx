@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Internal components
+// Landing Page Internal components
 import AdminLayout from "./components/admin/AdminLayout";
 import Banner from "./components/landing/Banner";
 import Footer from "./components/landing/Footer";
@@ -12,7 +12,7 @@ import MainNav from "./components/landing/MainNav";
 import NavCategories from "./components/landing/NavCategories";
 import ProductsList from "./components/landing/ProductLists";
 
-// Internal pages
+// Dashboard Internal pages
 import Customers from "./pages/admin/Customers";
 import Dashboard from "./pages/admin/Dashboard";
 import Orders from "./pages/admin/Orders";
