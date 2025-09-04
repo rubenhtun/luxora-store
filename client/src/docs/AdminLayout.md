@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `AdminLayout` component is the primary layout for the admin section of the Luxora Store eCommerce mini web application. It provides a responsive, modern interface with a sidebar for navigation, a top header with search and user controls, and a main content area for rendering routed components. Designed with a luxury aesthetic (e.g., black, gold, and white color scheme), it serves as the foundation for the admin dashboard, ensuring seamless navigation and a consistent user experience across desktop and mobile devices.
+The `AdminLayout` component serves as the main layout for the admin control sections of the Luxora Store eCommerce mini web application. It features a responsive, modern interface with a sidebar for navigation, a top header with search and user controls, and a main content area for rendering routed components. This layout ensures seamless navigation and provides a consistent user experience across both desktop and mobile devices.
 
 ## Features
 
