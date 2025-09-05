@@ -185,8 +185,8 @@ export default function AdminLayout() {
         </header>
 
         {/* Main Content Area */}
-        <main className="p-6">
-          <div className="max-w-7xl mx-auto p-4">
+        <main className="p-3">
+          <div className="max-w-7xl mx-auto p-3">
             <Outlet />
           </div>
         </main>

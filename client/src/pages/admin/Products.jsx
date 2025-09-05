@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 import {
@@ -13,6 +14,7 @@ import {
   FiPackage,
   FiDollarSign,
 } from "react-icons/fi";
+import { useLocation } from "react-router-dom";
 
 // Base API URL for product-related requests
 const baseURL = "http://localhost:3000/api";
@@ -42,6 +44,7 @@ export default function Products() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const productsPerPage = 10;
   const deleteModalRef = useRef(null);
+  const navigate = useNavigate();
 
   // Fetch products from API on component mount
   useEffect(() => {
@@ -114,8 +117,7 @@ export default function Products() {
 
   // Handle edit action (to be implemented)
   const handleEdit = (product) => {
-    console.log("Edit product:", product);
-    // Add navigation or edit logic here
+    navigate("/admin/add-new-product", { state: { productToEdit: product } });
   };
 
   return (

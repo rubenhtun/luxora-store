@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 // Base API URL
-const baseURL = "http://localhost:3000/api";
+import { baseURL } from "../../config";
 
 // Badge color mapping for product badges
 const badgeColors = {
@@ -21,15 +21,12 @@ const badgeColors = {
 const defaultBadgeColor =
   "bg-gradient-to-r from-gray-400 to-gray-600 text-white";
 
-// Component for adding or editing a product
 export default function AddNewProduct() {
-  // Extract productToEdit from location state for editing
-  const location = useLocation();
-  const productToEdit = location.state?.productToEdit || null;
-  const isEditMode = !!productToEdit;
+  const location = useLocation(); // Access the current location
+  const productToEdit = location.state?.productToEdit || false; // Get previous old data and determine if in edit mode
+  const isEditMode = !!productToEdit; // Boolean flag for edit mode
 
-  // State for form data
-  const [formData, setFormData] = useState({
+  const [productData, setProductData] = useState({
     name: productToEdit?.name || "",
     description: productToEdit?.description || "",
     price: productToEdit?.price || 0,
@@ -38,7 +35,7 @@ export default function AddNewProduct() {
     reviews: productToEdit?.reviews || 0,
     inStock:
       productToEdit?.inStock !== undefined ? productToEdit.inStock : true,
-    stockQuantity: productToEdit?.stockQuantity || 100,
+    stockQuantity: productToEdit?.stockQuantity || "100",
     colors: productToEdit?.colors || [],
     image: productToEdit?.image || "",
     images: productToEdit?.images || [],
@@ -47,30 +44,23 @@ export default function AddNewProduct() {
     badges: productToEdit?.badges || [],
     shippingInfo: productToEdit?.shippingInfo || "",
     returnPolicy: productToEdit?.returnPolicy || "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  }); // State to hold product data
+  const [isLoading, setIsLoading] = useState(false); // Loading state for form submission
+  const navigate = useNavigate(); // Navigation function
 
-  // Get badge color for display
-  const getBadgeColor = (badge) => badgeColors[badge] || defaultBadgeColor;
-
-  // Handle form field changes
-  const handleFormChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  // Get badge color class based on badge name
+  const getBadgeColor = (badge) => {
+    return badgeColors[badge] || defaultBadgeColor;
   };
 
-  // Handle array field changes (e.g., colors, badges, features)
-  const handleArrayFieldChange = (field, value) => {
-    const arrayValue = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item);
-    setFormData((prev) => ({ ...prev, [field]: arrayValue }));
+  // Handle changes to product data fields
+  const handleProductDataChange = (field, value) => {
+    setProductData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Reset form to initial state
-  const resetForm = () => {
-    setFormData({
+  // Reset product data to initial state
+  const resetProductData = () => {
+    setProductData({
       name: "",
       description: "",
       price: 0,
@@ -90,39 +80,43 @@ export default function AddNewProduct() {
     });
   };
 
-  // Handle form submission
+  // Handle form submission to add or update product
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault(); // Prevent default form submission
+    setIsLoading(true); // Set loading state initially
 
     try {
       if (isEditMode) {
         // Update existing product
-        await axios.put(`${baseURL}/products/${productToEdit._id}`, formData);
-        toast.success("Product updated successfully!");
+        const response = await axios.put(
+          `${baseURL}/products/${productToEdit._id}`,
+          productData
+        );
+        if (response.status === 200) {
+          toast.success("Product updated successfully!");
+          resetProductData(); // Reset form data
+          navigate("/admin/products"); // Navigate back to products list
+        }
       } else {
-        // Create new product
-        await axios.post(`${baseURL}/products`, formData);
-        toast.success("Product added successfully!");
+        // Add new product
+        const response = await axios.post(`${baseURL}/products`, productData);
+        if (response.status === 201) {
+          toast.success("Product added successfully!");
+          resetProductData(); // Reset form data
+          navigate("/admin/products"); // Navigate back to products list
+        }
       }
-      resetForm();
-      navigate("/admin/products");
     } catch (error) {
-      const message =
-        error.response?.status === 400
-          ? "Invalid product data. Please check the form."
-          : "Failed to save product. Please try again.";
-      toast.error(message);
-      console.error("Error saving product:", error);
+      toast.error("An error occurred while saving the product.");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Reset loading state
     }
   };
 
   // Handle cancel action
   const handleCancel = () => {
-    resetForm();
-    navigate("/admin/products");
+    resetProductData(); // Reset form data
+    navigate("/admin/products"); // Navigate back to products list
   };
 
   return (
@@ -142,8 +136,10 @@ export default function AddNewProduct() {
               <input
                 type="text"
                 placeholder="Enter product name"
-                value={formData.name}
-                onChange={(e) => handleFormChange("name", e.target.value)}
+                value={productData.name}
+                onChange={(e) =>
+                  handleProductDataChange("name", e.target.value)
+                }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
                 required
               />
@@ -156,9 +152,9 @@ export default function AddNewProduct() {
               </label>
               <textarea
                 placeholder="Enter product description"
-                value={formData.description}
+                value={productData.description}
                 onChange={(e) =>
-                  handleFormChange("description", e.target.value)
+                  handleProductDataChange("description", e.target.value)
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70 resize-none"
                 rows={3}
@@ -174,9 +170,9 @@ export default function AddNewProduct() {
               <input
                 type="number"
                 placeholder="0.00"
-                value={formData.price}
+                value={productData.price}
                 onChange={(e) =>
-                  handleFormChange("price", parseFloat(e.target.value) || 0)
+                  handleProductDataChange("price", parseFloat(e.target.value))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
                 min="0"
@@ -191,11 +187,11 @@ export default function AddNewProduct() {
               <input
                 type="number"
                 placeholder="0.00"
-                value={formData.originalPrice}
+                value={productData.originalPrice}
                 onChange={(e) =>
-                  handleFormChange(
+                  handleProductDataChange(
                     "originalPrice",
-                    parseFloat(e.target.value) || 0
+                    parseFloat(e.target.value)
                   )
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
@@ -212,9 +208,9 @@ export default function AddNewProduct() {
               <input
                 type="number"
                 placeholder="0.0"
-                value={formData.rating}
+                value={productData.rating}
                 onChange={(e) =>
-                  handleFormChange("rating", parseFloat(e.target.value) || 0)
+                  handleProductDataChange("rating", parseFloat(e.target.value))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
                 min="0"
@@ -229,9 +225,9 @@ export default function AddNewProduct() {
               <input
                 type="number"
                 placeholder="0"
-                value={formData.reviews}
+                value={productData.reviews}
                 onChange={(e) =>
-                  handleFormChange("reviews", parseInt(e.target.value) || 0)
+                  handleProductDataChange("reviews", parseFloat(e.target.value))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
                 min="0"
@@ -246,8 +242,10 @@ export default function AddNewProduct() {
               <input
                 type="text"
                 placeholder="Enter category"
-                value={formData.category}
-                onChange={(e) => handleFormChange("category", e.target.value)}
+                value={productData.category}
+                onChange={(e) =>
+                  handleProductDataChange("category", e.target.value)
+                }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
                 required
               />
@@ -259,11 +257,11 @@ export default function AddNewProduct() {
               <input
                 type="number"
                 placeholder="100"
-                value={formData.stockQuantity}
+                value={productData.stockQuantity}
                 onChange={(e) =>
-                  handleFormChange(
+                  handleProductDataChange(
                     "stockQuantity",
-                    parseInt(e.target.value) || 0
+                    parseFloat(e.target.value)
                   )
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
@@ -280,32 +278,31 @@ export default function AddNewProduct() {
                 <input
                   type="checkbox"
                   id="inStock"
-                  checked={formData.inStock}
+                  checked={productData.inStock}
                   onChange={(e) =>
-                    handleFormChange("inStock", e.target.checked)
+                    handleProductDataChange("inStock", e.target.checked)
                   }
                   className="sr-only"
-                  required
                 />
                 <label
                   htmlFor="inStock"
                   className={`block w-14 h-8 rounded-full cursor-pointer ${
-                    formData.inStock ? "bg-green-500" : "bg-gray-300"
+                    productData.inStock ? "bg-green-500" : "bg-red-400"
                   }`}
                 >
                   <div
                     className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                      formData.inStock ? "translate-x-6" : ""
+                      productData.inStock ? "translate-x-6" : ""
                     }`}
                   />
                 </label>
               </div>
               <span
                 className={`text-sm font-medium ${
-                  formData.inStock ? "text-green-600" : "text-gray-500"
+                  productData.inStock ? "text-green-600" : "text-red-500"
                 }`}
               >
-                {formData.inStock ? "Available" : "Out of Stock"}
+                {productData.inStock ? "Available" : "Out of Stock"}
               </span>
             </div>
 
@@ -317,15 +314,15 @@ export default function AddNewProduct() {
               <input
                 type="text"
                 placeholder="red, blue, green, black"
-                value={formData.colors.join(", ")}
+                value={productData.colors.join(", ")}
                 onChange={(e) =>
-                  handleArrayFieldChange("colors", e.target.value)
+                  handleProductDataChange("colors", e.target.value.split(", "))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
               />
-              {formData.colors.length > 0 && (
+              {productData.colors.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {formData.colors.map((color, index) => (
+                  {productData.colors.map((color, index) => (
                     <span
                       key={index}
                       className="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-300"
@@ -344,16 +341,16 @@ export default function AddNewProduct() {
               </label>
               <input
                 type="text"
-                placeholder="Best Seller, New, Premium, Featured"
-                value={formData.badges.join(", ")}
+                placeholder="Best Seller, New, Premium, Featured, Professional, Limited Edition"
+                value={productData.badges.join(", ")}
                 onChange={(e) =>
-                  handleArrayFieldChange("badges", e.target.value)
+                  handleProductDataChange("badges", e.target.value.split(", "))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
               />
-              {formData.badges.length > 0 && (
+              {productData.badges.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {formData.badges.map((badge, index) => (
+                  {productData.badges.map((badge, index) => (
                     <span
                       key={index}
                       className={`px-3 py-1 text-sm font-bold rounded-lg ${getBadgeColor(
@@ -375,15 +372,18 @@ export default function AddNewProduct() {
               <input
                 type="text"
                 placeholder="Wireless, Noise Cancelling, Bluetooth 5.0"
-                value={formData.features.join(", ")}
+                value={productData.features.join(", ")}
                 onChange={(e) =>
-                  handleArrayFieldChange("features", e.target.value)
+                  handleProductDataChange(
+                    "features",
+                    e.target.value.split(", ")
+                  )
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
               />
-              {formData.features.length > 0 && (
+              {productData.features.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {formData.features.map((feature, index) => (
+                  {productData.features.map((feature, index) => (
                     <span
                       key={index}
                       className="px-3 py-1 text-sm font-medium rounded-full bg-blue-50 text-blue-700 border border-blue-200"
@@ -395,29 +395,78 @@ export default function AddNewProduct() {
               )}
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload */}
             <div className="lg:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                Product Image URL <span className="text-red-500">*</span>
+                Product Image <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
-                placeholder="https://example.com/image.jpg"
-                value={formData.image}
-                onChange={(e) => handleFormChange("image", e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70"
+                type="file"
+                accept="image/*"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70 cursor-pointer"
                 required
+                onChange={(e) => {
+                  const file = e.target.files[0]; // Get the first selected file
+
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      handleProductDataChange("image", reader.result);
+                    };
+                    reader.readAsDataURL(file); // Convert to Base64 string
+                  }
+                }}
               />
-              {formData.image && (
+              {productData.image && (
                 <div className="mt-3">
                   <img
-                    src={formData.image}
                     alt="Preview"
                     className="h-24 w-24 object-cover rounded-xl border border-gray-200"
-                    onError={(e) =>
-                      (e.target.src = "https://via.placeholder.com/96")
-                    }
+                    src={productData.image}
                   />
+                </div>
+              )}
+            </div>
+
+            {/* Additional Images Upload */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Additional Images
+              </label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70 cursor-pointer"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files); // Convert FileList to Array
+                  const imagesArray = [];
+
+                  // Read each file and convert to Base64
+                  files.forEach((file) => {
+                    const reader = new FileReader(); // Create a new FileReader
+                    reader.onload = () => {
+                      imagesArray.push(reader.result);
+
+                      // Only update state when all files are read
+                      if (imagesArray.length === files.length) {
+                        handleProductDataChange("images", imagesArray);
+                      }
+                    };
+                    reader.readAsDataURL(file); // Convert each file to Base64 string
+                  });
+                }}
+              />
+              {productData.images.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {productData.images.map((imgSrc, index) => (
+                    <img
+                      key={index}
+                      alt={`Additional Image ${index + 1}`}
+                      className="h-24 w-24 object-cover rounded-xl border border-gray-200"
+                      src={imgSrc || "/placeholder-image.png"}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -429,9 +478,9 @@ export default function AddNewProduct() {
               </label>
               <textarea
                 placeholder="Free shipping on orders over $50"
-                value={formData.shippingInfo}
+                value={productData.shippingInfo}
                 onChange={(e) =>
-                  handleFormChange("shippingInfo", e.target.value)
+                  handleProductDataChange("shippingInfo", e.target.value)
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70 resize-none"
                 rows={2}
@@ -445,9 +494,9 @@ export default function AddNewProduct() {
               </label>
               <textarea
                 placeholder="30-day return policy with free returns"
-                value={formData.returnPolicy}
+                value={productData.returnPolicy}
                 onChange={(e) =>
-                  handleFormChange("returnPolicy", e.target.value)
+                  handleProductDataChange("returnPolicy", e.target.value)
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/70 resize-none"
                 rows={2}
@@ -466,8 +515,8 @@ export default function AddNewProduct() {
             </button>
             <button
               type="submit"
-              disabled={isLoading}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading} // Disable button when loading
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
             >
               {isLoading ? (
                 <div className="flex items-center">
