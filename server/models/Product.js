@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// ====================== Product Schema Definition =======================
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -19,6 +20,7 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Product price is required"],
       min: [0, "Price must be at least 0"],
+      get: (v) => (v / 100).toFixed(2), // Display prices in dollars with 2 decimal places
       set: (v) => parseFloat(v.toFixed(2)), // Store prices with 2 decimal places
     },
     originalPrice: {
@@ -60,8 +62,6 @@ const productSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      trim: true,
-      maxlength: [2000, "Image URL cannot exceed 2000 characters"],
     },
     images: {
       type: [String],
@@ -103,20 +103,35 @@ const productSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, "Return policy cannot exceed 500 characters"],
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   // Schema options: enable timestamps (createdAt, updatedAt) and include virtual fields in JSON and plain object outputs
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+// ========================= Virtuals =======================
 // Virtual property for discount status
 productSchema.virtual("onSale").get(function () {
   return this.originalPrice > 0 && this.price < this.originalPrice;
 });
 
+// ========================= Indexes =========================
 // Indexes for better performance
 productSchema.index({ name: "text", description: "text", category: "text" });
 productSchema.index({ price: 1, inStock: 1 });
 productSchema.index({ rating: -1, reviews: -1 });
 
+// ========================= Middleware =========================
+// Pre 'find' middleware to exclude soft-deleted products from queries
+productSchema.pre(/^find/, function (next) {
+  this.where({ isDeleted: false });
+  next();
+});
+
+// ========================= Model Export =========================
+// Create and export the Product model
 const Product = mongoose.model("Product", productSchema);
 module.exports = Product;

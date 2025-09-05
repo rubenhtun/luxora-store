@@ -1,3 +1,4 @@
+// 
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -15,7 +16,8 @@ app.use(
     credentials: true, // If you send cookies or auth headers
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Mount product routes
 app.use("/api/products", productRoute);

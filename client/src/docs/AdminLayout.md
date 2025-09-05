@@ -16,7 +16,7 @@ The `AdminLayout` component serves as the main layout for the admin control sect
 ## Dependencies
 
 - **React Router**: Utilizes `Link`, `Outlet`, and `useLocation` from `react-router-dom` (version 6 or higher) for client-side routing and navigation.
-- **Feather Icons**: Uses `react-icons/fi` for icons (e.g., `FiHome`, `FiBox`, `FiUser`) in the sidebar, header, and profile section.
+- **Feather Icons**: Uses `react-icons/fi` for icons (e.g., `FiHome`, `FiBox`, `FiShoppingBag`, `FiUser`, `FiSettings`) in the sidebar, header, and profile section.
 - **Tailwind CSS**: Employs utility classes for styling, providing a responsive and visually appealing design.
 - **React**: Built with React (version 18 or higher) for component rendering and state management.
 

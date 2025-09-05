@@ -8,24 +8,11 @@ const sendErrorResponse = (res, status, message, error = null) => {
   return res.status(status).json(response);
 };
 
-/**
- * @desc Get all products
- * @route GET /products
- * @returns {Object} Array of products
- */
-exports.getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.status(200).json(products);
-  } catch (error) {
-    sendErrorResponse(res, 500, "Failed to fetch products", error);
-  }
-};
-
+// ======================= Create =======================
 /**
  * @desc Add a new product
  * @route POST /products
- * @param {Object} req.body - Product data (name, price, inStock)
+ * @param {Object} req.body - Product data (name, description, price, category, inStock)
  * @returns {Object} Created product
  */
 exports.addProduct = async (req, res) => {
@@ -47,7 +34,7 @@ exports.addProduct = async (req, res) => {
     return sendErrorResponse(
       res,
       400,
-      "Invalid product data: name (string), description (string), price (positive number), category(string) and inStock (boolean) are required"
+      "Invalid product data. Ensure name, description, price, category, and inStock are provided with correct types."
     );
   }
 
@@ -64,6 +51,60 @@ exports.addProduct = async (req, res) => {
   }
 };
 
+// ======================= Read =======================
+/**
+ * @desc Get all products
+ * @route GET /products
+ * @returns {Object} Array of products
+ */
+exports.getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ isDeleted: false }); // Exclude soft-deleted products
+    res.status(200).json(products);
+  } catch (error) {
+    sendErrorResponse(res, 500, "Failed to fetch products", error);
+  }
+};
+
+// ======================= Update =======================
+/**
+ * @desc Update a product by ID
+ * @route PUT /products/:id
+ * @param {String} req.params.id - Product ID
+ * @param {Object} req.body - Updated product data
+ * @returns {Object} Updated product
+ */
+exports.updateProduct = async (req, res) => {
+  const { id: productId } = req.params;
+  const updateData = req.body;
+
+  // Validate ObjectId
+  if (!mongoose.isValidObjectId(productId)) {
+    return sendErrorResponse(res, 400, "Invalid product ID");
+  }
+
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      updateData,
+      {
+        new: true, // Return the updated document
+        runValidators: true, // Run schema validators on update
+      }
+    );
+    if (!updatedProduct) {
+      return sendErrorResponse(res, 404, "Product not found");
+    }
+    res.json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    sendErrorResponse(res, 500, "Failed to update product", error);
+  }
+};
+
+// ======================= Delete =======================
 /**
  * @desc Delete a product by ID
  * @route DELETE /products/:id
@@ -79,7 +120,10 @@ exports.deleteProduct = async (req, res) => {
   }
 
   try {
-    const deletedProduct = await Product.findByIdAndDelete(productId);
+    const deletedProduct = await Product.findByIdAndUpdate(productId, {
+      isDeleted: true, // Soft delete flag
+      new: true,
+    });
     if (!deletedProduct) {
       return sendErrorResponse(res, 404, "Product not found");
     }
