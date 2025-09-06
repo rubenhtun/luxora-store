@@ -3,6 +3,7 @@ import axios from "axios";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FiX } from "react-icons/fi";
 
 // Base API URL
 import { baseURL } from "../../config";
@@ -120,8 +121,8 @@ export default function AddNewProduct() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 lg:p-6">
-      <div className="max-w-7xl mx-auto bg-white/70 rounded-2xl shadow-xl p-4 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto bg-white/70 rounded-2xl shadow-xl p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           {isEditMode ? "Edit Product" : "Add New Product"}
         </h2>
@@ -418,12 +419,20 @@ export default function AddNewProduct() {
                 }}
               />
               {productData.image && (
-                <div className="mt-3">
+                <div className="mt-3 relative inline-block">
                   <img
                     alt="Preview"
                     className="h-24 w-24 object-cover rounded-xl border border-gray-200"
                     src={productData.image}
                   />
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleProductDataChange("image", "")} // Remove selected image
+                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 cursor-pointer"
+                  >
+                    <FiX className="w-5 h-5" />
+                  </button>
                 </div>
               )}
             </div>
@@ -460,12 +469,26 @@ export default function AddNewProduct() {
               {productData.images.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-3">
                   {productData.images.map((imgSrc, index) => (
-                    <img
-                      key={index}
-                      alt={`Additional Image ${index + 1}`}
-                      className="h-24 w-24 object-cover rounded-xl border border-gray-200"
-                      src={imgSrc || "/placeholder-image.png"}
-                    />
+                    <div key={index} className="relative inline-block">
+                      <img
+                        alt={`Additional Image ${index + 1}`}
+                        className="h-24 w-24 object-cover rounded-xl border border-gray-200"
+                        src={imgSrc || "/placeholder-image.png"}
+                      />
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleProductDataChange(
+                            "images",
+                            productData.images.filter((_, i) => i !== index) // remove only that image
+                          )
+                        }
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 cursor-pointer"
+                      >
+                        <FiX className="w-5 h-5" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
