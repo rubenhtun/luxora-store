@@ -1,20 +1,18 @@
-const express = require("express");
-const router = express.Router();
-const productController = require("../controllers/productController");
+const express = require("express"); // Express framework for building API
+const router = express.Router(); // This router will handle all product-related API endpoints
+const productController = require("../controllers/productController"); // Import product controller functions
 
 // Create a new product
 router.post("/", productController.addProduct);
+
 // Get all products
 router.get("/", productController.getAllProducts);
+
 // Update a product
 router.put("/:id", productController.updateProduct);
+
 // Delete a product
 router.delete("/:id", productController.deleteProduct);
 
-// Add error handling middleware
-router.use((err, req, res, next) => {
-  console.error("Error in product routes:", err);
-  res.status(500).json({ message: "Internal server error" });
-});
-
+// Export the router to be used in the main server file
 module.exports = router;

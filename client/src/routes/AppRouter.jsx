@@ -19,8 +19,8 @@ import Settings from "../pages/admin/Settings";
 import AddNewProduct from "../pages/admin/AddNewProduct";
 
 // Auth
+import Signup from "../pages/auth/Signup";
 import Login from "../pages/auth/Login";
-// import Signup from "../pages/auth/Signup";
 // import Logout from "../pages/auth/Logout";
 
 export default function AppRouter() {
@@ -43,9 +43,9 @@ export default function AppRouter() {
         />
 
         {/* Auth */}
+        <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        {/* <Route path="/signup" element={<Signup />} />
-        <Route path="/logout" element={<Logout />} /> */}
+        {/* <Route path="/logout" element={<Logout />} /> */}
 
         {/* Admin */}
         <Route path="/admin" element={<AdminLayout />}>
