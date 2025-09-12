@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { FiUser, FiHeart, FiShoppingCart, FiSearch, FiX } from "react-icons/fi";
+import {
+  FiUser,
+  FiHeart,
+  FiShoppingCart,
+  FiSearch,
+  FiX,
+  FiLogOut,
+} from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 // Primary navigation component for the landing page, featuring a logo, search bar/modal, and action icons
 // Uses a responsive layout with an inline search bar on desktop and a blurred-background modal on small screens
@@ -10,8 +18,7 @@ export default function MainNav() {
   // Reference to search modal/input for outside click detection
   const searchRef = useRef(null);
 
-  // Array of icons for user actions (profile, wishlist, cart)
-  const navIcons = [FiUser, FiHeart, FiShoppingCart];
+  const navigate = useNavigate(); // Navigation function
 
   // Toggles the search modal open/closed state on small screens
   const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
@@ -30,6 +37,18 @@ export default function MainNav() {
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isSearchOpen]);
+
+  // Show the Logout button if the user is logged in; otherwise, hide it
+  const token = localStorage.getItem("token");
+  const isLoggedIn = !!token; // true if token exists
+
+  // Logout Handler
+  const handleLogout = () => {
+    // Clear token from localStorage or cookies
+    localStorage.removeItem("token");
+    // Redirect user to login page
+    navigate("/login");
+  };
 
   return (
     // Main navigation container with constrained width, centered layout, and bottom border
@@ -54,7 +73,7 @@ export default function MainNav() {
         {/* Search submission button */}
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 text-sm hover:bg-blue-700 cursor-pointer transition-colors focus:outline-none rounded-none"
+          className="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-500 cursor-pointer transition-colors focus:outline-none rounded-none"
         >
           Search
         </button>
@@ -64,23 +83,58 @@ export default function MainNav() {
       <div className="flex items-center gap-2 md:gap-4">
         {/* Search icon button to open modal on small screens (hidden on md and above) */}
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="md:hidden p-2 rounded-lg hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={toggleSearch}
           aria-label="Open search modal"
         >
           <FiSearch className="text-lg text-slate-500" />
         </button>
 
-        {/* Action icons for user interactions (profile, wishlist, cart) */}
-        {navIcons.map((Icon, idx) => (
+        {/* Profile / Sign Up */}
+        {isLoggedIn ? (
           <button
-            key={idx}
+            onClick={() => navigate("/profile")}
             className="p-2 md:p-3 rounded-lg hover:bg-stone-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
-            aria-label={["View profile", "View wishlist", "View cart"][idx]}
+            aria-label="View profile"
           >
-            <Icon className="text-lg text-slate-500" />
+            <FiUser className="text-lg text-slate-500" />
           </button>
-        ))}
+        ) : (
+          <button
+            onClick={() => navigate("/signup")}
+            className="p-2 md:p-3 rounded-lg hover:bg-stone-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm text-slate-500"
+            aria-label="Sign up"
+          >
+            Sign Up
+          </button>
+        )}
+
+        {/* Wishlist - always visible */}
+        <button
+          className="p-2 md:p-3 rounded-lg hover:bg-stone-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
+          aria-label="View wishlist"
+        >
+          <FiHeart className="text-lg text-slate-500" />
+        </button>
+
+        {/* Cart - always visible */}
+        <button
+          className="p-2 md:p-3 rounded-lg hover:bg-stone-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
+          aria-label="View cart"
+        >
+          <FiShoppingCart className="text-lg text-slate-500" />
+        </button>
+
+        {/* Logout button */}
+        {isLoggedIn && (
+          <button
+            onClick={handleLogout}
+            className="p-2 md:p-3 rounded-lg hover:bg-stone-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-400"
+            aria-label="Logout"
+          >
+            <FiLogOut className="text-lg text-red-500" />
+          </button>
+        )}
       </div>
 
       {/* Search modal for small screens with blurred background, positioned below nav */}

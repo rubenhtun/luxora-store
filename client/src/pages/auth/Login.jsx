@@ -1,6 +1,11 @@
-// === imports ===
+import axios from "axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { toast } from "react-toastify";
+
+// Base API URL
+import { baseURL } from "../../config";
 
 export default function Login() {
   // State to manage email and password
@@ -10,10 +15,38 @@ export default function Login() {
   // State to manage for showing or hiding password
   const [showPassword, setShowPassword] = useState(false);
 
+  // State for inline error message
+  const [error, setError] = useState({});
+
+  const navigate = useNavigate(); // Navigation function
+
   // Handler for form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Email:", email, "Password:", password);
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent default form submission
+
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    try {
+      // Send a POST request to the signup API endpoint
+      const response = await axios.post(`${baseURL}/auth/login`, {
+        email: trimmedEmail,
+        password: trimmedPassword,
+      });
+
+      // If login is successful (HTTP status 200)
+      if (response.status === 200) {
+        localStorage.setItem("token", response.data.token); // Save token
+        toast.success("Logged in successfully!");
+        navigate("/"); // Redirect user to home page
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    } catch (error) {
+      // Display backend/general error under form
+      setError({ form: error.response?.data?.message || "Login failed." });
+      console.error("Login error:", error); // Log error for debugging
+    }
   };
 
   return (
@@ -22,6 +55,12 @@ export default function Login() {
         <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
           Login to Your Account
         </h2>
+
+        {/* Display backend/general error */}
+        {error.form && (
+          <p className="text-red-500 text-center mb-4">{error.form}</p>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email */}
           <div>
@@ -73,7 +112,7 @@ export default function Login() {
           {/* Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-500 transition duration-200"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-500 transition duration-200 cursor-pointer"
           >
             Login
           </button>

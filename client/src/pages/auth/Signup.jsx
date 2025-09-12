@@ -1,4 +1,3 @@
-// === imports ===
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,21 +19,50 @@ export default function Signup() {
   // State to toggle password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // State for inline error messages
+  const [errors, setErrors] = useState({});
+
   const navigate = useNavigate(); // Navigation function
 
   // Handle changes to form fields
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+
+    // Clear error for the field while typing
+    setErrors((prev) => ({ ...prev, [id]: "" }));
   };
 
   // Handle form submission to sign up
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
 
+    const newErrors = {};
+
+    // Ensure password length is at least 8 characters
+    if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long.";
+    }
+
     // Check if password and confirm password match
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      newErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    // Ensure name is provided
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required.";
+    }
+
+    // Ensure email is provided
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required.";
+    }
+
+    // If any frontend validation fails, show errors
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -50,9 +78,8 @@ export default function Signup() {
         toast.error("Signup failed. Please try again.");
       }
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "An error occurred during signup"
-      );
+      // Display backend/general error under form
+      setErrors({ form: error.response?.data?.message || "Signup failed." });
       console.error("Signup error:", error); // Log error for debugging
     }
   };
@@ -63,6 +90,12 @@ export default function Signup() {
         <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
           Create Your Account
         </h2>
+
+        {/* Display backend/general error */}
+        {errors.form && (
+          <p className="text-red-500 text-center mb-4">{errors.form}</p>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name */}
           <div>
@@ -81,6 +114,10 @@ export default function Signup() {
               placeholder="John Doe"
               required
             />
+            {/* Inline error message */}
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -100,6 +137,9 @@ export default function Signup() {
               placeholder="you@example.com"
               required
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -128,6 +168,9 @@ export default function Signup() {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
           </div>
 
           {/* Confirm Password */}
@@ -156,12 +199,17 @@ export default function Signup() {
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.confirmPassword}
+              </p>
+            )}
           </div>
 
           {/* Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-500 transition duration-200"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-500 transition duration-200 cursor-pointer"
           >
             Sign Up
           </button>
