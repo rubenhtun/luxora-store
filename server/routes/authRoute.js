@@ -8,8 +8,5 @@ router.post("/signup", signup);
 // This route handles user login
 router.post("/login", login);
 
-// This route handles user logout
-router.post("/logout", logout);
-
 // Export the router to be used in the main server file
 module.exports = router;

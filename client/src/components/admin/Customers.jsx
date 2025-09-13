@@ -1,4 +1,4 @@
-export default function Orders() {
+export default function Customers() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-center py-4">
