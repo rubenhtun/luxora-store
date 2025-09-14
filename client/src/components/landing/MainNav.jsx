@@ -73,7 +73,7 @@ export default function MainNav() {
         {/* Search submission button */}
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-500 cursor-pointer transition-colors focus:outline-none rounded-none"
+          className="cursor-pointer px-4 py-2 rounded-none text-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none transition-colors"
         >
           Search
         </button>
