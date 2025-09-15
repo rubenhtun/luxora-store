@@ -82,13 +82,3 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-// ======================= Logout =======================
-/**
- * @desc Logout user
- * @route Logout Button /auth/logout
- * @returns {Object} Removes JWT token and redirects to login page
- */
-exports.logout = async (req, res) => {
-  
-};

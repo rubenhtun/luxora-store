@@ -15,6 +15,12 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: [/\S+@\S+\.\S+/, "Please provide a valid email"], // Basic email validation
     },
+    phone: {
+      type: String,
+      required: false, // optional at signup
+      unique: true,
+      sparse: true, // ensures unique works even when field is empty
+    },
     password: {
       type: String,
       required: [true, "Password is required"],

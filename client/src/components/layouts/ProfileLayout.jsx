@@ -82,6 +82,10 @@ export default function ProfileLayout() {
 
   const pageInfo = getPageInfo();
 
+  // Get first letter of username
+  const user = JSON.parse(localStorage.getItem("user"));
+  const firstLetter = user?.name?.charAt(0).toUpperCase() || "U";
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Mobile sidebar overlay */}
@@ -204,8 +208,10 @@ export default function ProfileLayout() {
               </div>
 
               {/* Optional: Add user avatar or actions */}
-              <div className="hidden lg:flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"></div>
+              <div className="hidden lg:flex items-center justify-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center">
+                  {firstLetter}
+                </div>
               </div>
             </div>
           </div>
@@ -215,7 +221,7 @@ export default function ProfileLayout() {
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">
             {/* Content Container with better spacing */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 min-h-[600px]">
+            <div className="bg-white rounded-md shadow-sm border border-gray-200 min-h-[600px]">
               <div className="p-6">
                 <Outlet />
               </div>

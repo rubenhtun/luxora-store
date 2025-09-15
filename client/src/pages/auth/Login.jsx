@@ -34,9 +34,12 @@ export default function Login() {
         password: trimmedPassword,
       });
 
+      // Access token (short-lived) from response body
+      const { token } = response.data;
+
       // If login is successful (HTTP status 200)
       if (response.status === 200) {
-        localStorage.setItem("token", response.data.token); // Save token
+        localStorage.setItem("accessToken", token); // Save token again
         toast.success("Logged in successfully!");
         navigate("/"); // Redirect user to home page
       } else {

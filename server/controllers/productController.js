@@ -92,9 +92,11 @@ exports.updateProduct = async (req, res) => {
         runValidators: true, // Run schema validators on update
       }
     );
+
     if (!updatedProduct) {
       return sendErrorResponse(res, 404, "Product not found");
     }
+
     res.json({
       message: "Product updated successfully",
       product: updatedProduct,
@@ -124,9 +126,11 @@ exports.deleteProduct = async (req, res) => {
       isDeleted: true, // Soft delete flag
       new: true,
     });
+
     if (!deletedProduct) {
       return sendErrorResponse(res, 404, "Product not found");
     }
+
     res.json({
       message: "Product deleted successfully",
       product: deletedProduct,

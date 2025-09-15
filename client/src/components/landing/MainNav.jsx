@@ -39,13 +39,13 @@ export default function MainNav() {
   }, [isSearchOpen]);
 
   // Show the Logout button if the user is logged in; otherwise, hide it
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   const isLoggedIn = !!token; // true if token exists
 
   // Logout Handler
   const handleLogout = () => {
     // Clear token from localStorage or cookies
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
     // Redirect user to login page
     navigate("/login");
   };
