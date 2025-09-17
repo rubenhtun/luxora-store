@@ -1,5 +1,6 @@
 // Core & third-party imports
 const express = require("express"); // Express framework for building API
+const cookieParser = require("cookie-parser"); // Cookie-parser middleware to parse cookies from incoming requests
 const cors = require("cors"); // CORS middleware to allow cross-origin requests
 const dotenv = require("dotenv"); // To load environment variables from .env file
 
@@ -25,6 +26,7 @@ app.use(
   })
 );
 
+app.use(cookieParser()); // Enable cookie parsing so cookies are accessible via req.cookies 
 app.use(express.json({ limit: "50mb" })); // Parse incoming JSON requests
 app.use(express.urlencoded({ limit: "50mb", extended: true })); // Parse URL-encoded data
 

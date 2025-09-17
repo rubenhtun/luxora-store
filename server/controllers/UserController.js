@@ -1,4 +1,27 @@
+const bcrypt = require("bcryptjs"); // Import bcryptjs for hashing passwords securely
 const User = require("../models/User"); // Import the User model
+
+// ======================= Get Authenticated User =======================
+/**
+ * @desc Retrieve the currently authenticated user's information
+ * @route GET /users/me
+ * @access Private (requires valid JWT cookie)
+ * @returns {Object} User object excluding sensitive fields like password
+ */
+exports.getAuthenticatedUser = async (req, res) => {
+  try {
+    const userId = req.user.id; // user info set by auth middleware from JWT
+    const user = await User.findById(userId).select("-password"); // exclude password
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user); // return user info
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch user info", error });
+  }
+};
 
 // ======================= Updating user fields =======================
 /**
@@ -15,6 +38,7 @@ const updateUserField = async (req, res, field, hash = false) => {
     if (!value)
       return res.status(400).json({ message: `${field} is required` });
 
+    // Hash password
     if (hash) value = await bcrypt.hash(value, 10);
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -26,8 +50,9 @@ const updateUserField = async (req, res, field, hash = false) => {
     if (!updatedUser)
       return res.status(404).json({ message: "Your account not found" });
 
-    res.json({ message: `${field} updated successfully`, user: updatedUser });
+    res.json({ message: `${field} updated successfully` });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error", error });
   }
 };

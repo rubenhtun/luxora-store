@@ -3,8 +3,8 @@ const { JWT_SECRET } = require("../config/config"); // Import the secret key fro
 
 // Middleware to protect routes and verify JWT
 const authMiddleware = (req, res, next) => {
-  // Get token from Authorization header in the format: "Bearer <token>"
-  const token = req.headers.authorization?.split(" ")[1];
+  // Get token from httpOnly cookie
+  const token = req.cookies.token;
 
   // If no token is provided, return 401 Unauthorized
   if (!token) return res.status(401).json({ message: "Unauthorized" });

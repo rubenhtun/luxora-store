@@ -1,20 +1,14 @@
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import React, { useState } from "react";
-import { FaEdit, FaPlusCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { FaEdit, FaPlusCircle } from "react-icons/fa";
 import EditModal from "./EditModal";
 
 // Base API URL
 import { baseURL } from "../../config";
 
 export default function UserInfo() {
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || {
-      name: "John Doe",
-      email: "john@example.com",
-      phone: null,
-    }
-  );
+  const [user, setUser] = useState(null);
 
   // Modal control
   const [showModal, setShowModal] = useState(false);
@@ -28,6 +22,28 @@ export default function UserInfo() {
     setShowModal(true);
   };
 
+  useEffect(() => {
+    // Define async function inside useEffect
+    const fetchUserInfo = async () => {
+      try {
+        const response = await axios.get(`${baseURL}/users/me`, {
+          withCredentials: true, // send HTTP-only cookie
+        });
+
+        if (response.data) {
+          setUser(response.data);
+        } else {
+          toast.error("Failed to get user info.");
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+        toast.error("Failed to get user info.");
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
   // Save changes for any field
   const handleSave = async () => {
     if (!inputValue) {
@@ -36,7 +52,6 @@ export default function UserInfo() {
     }
 
     try {
-      const token = localStorage.getItem("accessToken"); // if using localStorage
       const payload = { [editField]: inputValue };
 
       // API endpoint may differ based on field, adjust if needed
@@ -44,21 +59,23 @@ export default function UserInfo() {
         `${baseURL}/users/update-${editField}`,
         payload,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true, // ensures HTTP-only cookie is sent
         }
       );
 
       if (response.status === 200) {
-        const updatedUser = response.data.user;
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser((prev) => ({ ...prev, [editField]: inputValue }));
         setShowModal(false);
         toast.success(response.data.message);
       }
     } catch (error) {
-      console.error(`Error updating ${editField}:`, error);
+      toast.error(`Failed to update ${editField}`);
     }
   };
+
+  if (!user) {
+    return <div className="p-6">Loading user info...</div>;
+  }
 
   return (
     <div className="p-6 space-y-6">

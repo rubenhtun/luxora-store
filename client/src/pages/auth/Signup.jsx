@@ -72,13 +72,6 @@ export default function Signup() {
         withCredentials: true, // so refresh token cookie is set
       });
 
-      // Access token (short-lived) from response body
-      const { token, user } = response.data;
-
-      // Store access token in memory/localStorage (temp)
-      localStorage.setItem("accessToken", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
       // If signup is successful (HTTP status 201)
       if (response.status === 201) {
         toast.success(response.data.message || "Signed up successfully!");

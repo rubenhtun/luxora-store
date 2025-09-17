@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   FiUser,
   FiHeart,
@@ -7,21 +9,20 @@ import {
   FiX,
   FiLogOut,
 } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+
+// Base API URL
+import { baseURL } from "../../config";
 
 // Primary navigation component for the landing page, featuring a logo, search bar/modal, and action icons
 // Uses a responsive layout with an inline search bar on desktop and a blurred-background modal on small screens
 export default function MainNav() {
-  // State to toggle search modal visibility on small screens
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  // Reference to search modal/input for outside click detection
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const searchRef = useRef(null);
-
-  const navigate = useNavigate(); // Navigation function
+  const navigate = useNavigate();
 
   // Toggles the search modal open/closed state on small screens
-  const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
+  const toggleSearch = () => setIsSearchOpen((prev) => !prev);
 
   // Closes modal when clicking outside the search box on small screens
   useEffect(() => {
@@ -39,15 +40,35 @@ export default function MainNav() {
   }, [isSearchOpen]);
 
   // Show the Logout button if the user is logged in; otherwise, hide it
-  const token = localStorage.getItem("accessToken");
-  const isLoggedIn = !!token; // true if token exists
+  const checkAuth = async () => {
+    try {
+      const response = await axios.get(`${baseURL}/users/me`, {
+        withCredentials: true, // send HTTP-only cookie
+      });
+      console.log(response.data);
+      setIsLoggedIn(response.status === 200); // user is logged in
+    } catch (err) {
+      setIsLoggedIn(false); // not logged in or token expired
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   // Logout Handler
-  const handleLogout = () => {
-    // Clear token from localStorage or cookies
-    localStorage.removeItem("accessToken");
-    // Redirect user to login page
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${baseURL}/auth/logout`,
+        {},
+        { withCredentials: true } // clears cookie
+      );
+      setIsLoggedIn(false);
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

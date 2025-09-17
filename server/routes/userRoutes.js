@@ -3,6 +3,9 @@ const router = express.Router(); // This router will handle all user-related API
 const UserController = require("../controllers/UserController"); // Import user controller functions
 const authMiddleware = require("../middleware/authMiddleware"); // JWT auth
 
+// Get Authenticated User
+router.get("/me", authMiddleware, UserController.getAuthenticatedUser);
+
 // Update user name
 router.patch("/update-name", authMiddleware, UserController.updateName);
 
