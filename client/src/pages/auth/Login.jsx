@@ -1,13 +1,19 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
+
+// Auth Context Provider
+import { AuthContext } from "../../context/AuthContext";
 
 // Base API URL
 import { baseURL } from "../../config";
 
 export default function Login() {
+  // Context
+  const { setIsLoggedIn } = useContext(AuthContext);
+
   // State to manage email and password
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,17 +35,18 @@ export default function Login() {
 
     try {
       // Send a POST request to the signup API endpoint
-      const response = await axios.post(`${baseURL}/auth/login`, {
-        email: trimmedEmail,
-        password: trimmedPassword,
-      });
-
-      // Access token (short-lived) from response body
-      const { token } = response.data;
+      const response = await axios.post(
+        `${baseURL}/auth/login`,
+        {
+          email: trimmedEmail,
+          password: trimmedPassword,
+        },
+        { withCredentials: true }
+      );
 
       // If login is successful (HTTP status 200)
       if (response.status === 200) {
-        localStorage.setItem("accessToken", token); // Save token again
+        setIsLoggedIn(true);
         toast.success("Logged in successfully!");
         navigate("/"); // Redirect user to home page
       } else {

@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   FiUser,
   FiHeart,
@@ -10,51 +10,23 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 
+// Auth Context Provider
+import { AuthContext } from "../../context/AuthContext";
+
 // Base API URL
 import { baseURL } from "../../config";
 
 // Primary navigation component for the landing page, featuring a logo, search bar/modal, and action icons
-// Uses a responsive layout with an inline search bar on desktop and a blurred-background modal on small screens
 export default function MainNav() {
+  // State & Contex
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
+
   const searchRef = useRef(null);
   const navigate = useNavigate();
 
   // Toggles the search modal open/closed state on small screens
   const toggleSearch = () => setIsSearchOpen((prev) => !prev);
-
-  // Closes modal when clicking outside the search box on small screens
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchOpen(false);
-      }
-    };
-
-    if (isSearchOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isSearchOpen]);
-
-  // Show the Logout button if the user is logged in; otherwise, hide it
-  const checkAuth = async () => {
-    try {
-      const response = await axios.get(`${baseURL}/users/me`, {
-        withCredentials: true, // send HTTP-only cookie
-      });
-      console.log(response.data);
-      setIsLoggedIn(response.status === 200); // user is logged in
-    } catch (err) {
-      setIsLoggedIn(false); // not logged in or token expired
-    }
-  };
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
   // Logout Handler
   const handleLogout = async () => {
@@ -70,6 +42,21 @@ export default function MainNav() {
       console.error(error);
     }
   };
+
+  // Closes modal when clicking outside the search box on small screens
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    if (isSearchOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSearchOpen]);
 
   return (
     // Main navigation container with constrained width, centered layout, and bottom border
