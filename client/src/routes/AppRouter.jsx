@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 // Landing Page Components
 import Banner from "../components/landing/Banner";
@@ -59,7 +60,14 @@ export default function AppRouter() {
         <Route path="/login" element={<Login />} />
 
         {/* User Profile */}
-        <Route path="/profile" element={<ProfileLayout />}>
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfileLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<UserInfo />} />
           <Route path="orders" element={<Orders />} />
           <Route path="address-book" element={<AddressBook />} />
@@ -76,14 +84,13 @@ export default function AppRouter() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<Products />} />
-          <Route path="orders" element={<Orders />} />
           <Route path="user-orders" element={<UserOrders />} />
           <Route path="customers" element={<Customers />} />
           <Route path="settings" element={<Settings />} />
           <Route path="add-new-product" element={<AddNewProduct />} />
         </Route>
       </Routes>
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={3000} className="z-50" />
     </BrowserRouter>
   );
 }

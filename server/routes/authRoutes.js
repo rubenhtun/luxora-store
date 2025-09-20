@@ -1,12 +1,20 @@
 const express = require("express"); // Express framework for building API
 const router = express.Router(); // This router will handle all authentication-related API endpoints
-const { signup, login, logout } = require("../controllers/authController"); // Import auth controller functions
+const {
+  signup,
+  login,
+  refresh,
+  logout,
+} = require("../controllers/authController"); // Import auth controller functions
 
 // This route handles user signup
 router.post("/signup", signup);
 
 // This route handles user login
 router.post("/login", login);
+
+// Add refresh token route
+router.post("/refresh", refresh);
 
 // This route handles user logout
 router.post("/logout", logout);

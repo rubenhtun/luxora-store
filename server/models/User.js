@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"], // Role for authorization
       default: "user",
     },
+    refreshToken: [
+      {
+        token: { type: String, required: true },
+        expiresAt: { type: Date, required: true },
+      },
+    ],
   },
   { timestamps: true } // Automatically add createdAt and updatedAt fields
 );

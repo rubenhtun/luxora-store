@@ -21,12 +21,13 @@ const app = express();
 app.use(
   cors({
     origin: "http://localhost:5173", // Allow frontend URL
-    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
     credentials: true, // Allow cookies or Authorization headers
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
   })
 );
 
-app.use(cookieParser()); // Enable cookie parsing so cookies are accessible via req.cookies 
+app.use(cookieParser()); // Enable cookie parsing so cookies are accessible via req.cookies
 app.use(express.json({ limit: "50mb" })); // Parse incoming JSON requests
 app.use(express.urlencoded({ limit: "50mb", extended: true })); // Parse URL-encoded data
 

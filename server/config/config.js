@@ -4,6 +4,10 @@ module.exports = {
   // Secret key for signing JWT tokens
   JWT_SECRET: process.env.JWT_SECRET || "secret_key",
 
+  // Refresh token secret key for signing refresh JWT tokens
+  REFRESH_TOKEN_SECRET:
+    process.env.REFRESH_TOKEN_SECRET || "refresh_secret_key",
+
   // MongoDB connection URI
   MONGO_URI: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/luxora-store",
 };
