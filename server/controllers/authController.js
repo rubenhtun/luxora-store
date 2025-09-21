@@ -190,7 +190,7 @@ exports.logout = async (req, res) => {
       }
     }
 
-    // Clear both cookies
+    // Clear cookies by setting them to empty and expiring immediately
     res.cookie("accessToken", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // only send over HTTPS in prod
@@ -202,6 +202,19 @@ exports.logout = async (req, res) => {
       secure: process.env.NODE_ENV === "production", // only send over HTTPS in prod
       sameSite: "strict",
       expires: new Date(0),
+    });
+
+    // Alternatively, use res.clearCookie
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
     });
 
     res.status(200).json({ message: "Logout successful" });
@@ -222,7 +235,7 @@ exports.refresh = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-      return res.status(401).json({ message: "Refresh token not found" });
+      return res.status(401).json({ error: "Refresh token required" });
     }
 
     // Verify refresh token
@@ -235,7 +248,7 @@ exports.refresh = async (req, res) => {
     );
 
     if (!user || !validToken) {
-      return res.status(401).json({ message: "Invalid refresh token" });
+      return res.status(403).json({ error: "Invalid refresh token" });
     }
 
     // Generate new tokens

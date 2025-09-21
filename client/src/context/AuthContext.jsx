@@ -1,83 +1,119 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 import api from "../axiosInstance";
 
-// Create auth context
+// Create AuthContext
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const isAuthenticated = !!user;
 
-  // Check if user is logged in on app load
-  const checkAuth = async () => {
-    try {
-      setLoading(true);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
-      const res = await api.get("/users/me", { signal: controller.signal }); // Get current user info
-      clearTimeout(timeoutId);
-      setUser(res.data.user);
-      setIsLoggedIn(true);
-    } catch {
-      console.error(
-        "Auth check failed:",
-        error.message,
-        error.response?.status
-      );
-      setUser(null);
-      setIsLoggedIn(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Login user
-  const login = async (credentials) => {
-    const res = await api.post("/auth/login", credentials);
-    setUser(res.data.user);
-    setIsLoggedIn(true);
-    return res.data;
-  };
-
-  // Logout user
-  const logout = async () => {
-    await api.post("/auth/logout");
-    setUser(null);
-    setIsLoggedIn(false);
-  };
-
-  // Refresh token periodically to keep user logged in
+  // Add refresh token functionality
   const refreshToken = async () => {
     try {
-      const res = await api.post("/auth/refresh");
-      setIsLoggedIn(true);
-      setUser(res.data.user);
-    } catch {
-      setIsLoggedIn(false);
+      const response = await api.post("/auth/refresh");
+      return response.data;
+    } catch (error) {
+      console.error("Token refresh failed:", error);
       setUser(null);
+      return null;
     }
   };
 
+  // Enhanced check auth status
   useEffect(() => {
-    checkAuth(); // Initial auth check
+    let mounted = true;
 
-    // Refresh token 5 minutes before expiry
-    const interval = setInterval(refreshToken, 55 * 60 * 1000);
-    return () => clearInterval(interval); // Cleanup on unmount
+    const checkAuthStatus = async () => {
+      try {
+        // Try to refresh token first
+        await refreshToken();
+
+        if (mounted) {
+          const response = await api.get("/users/me");
+          setUser(response.data);
+          setError(null);
+
+          // Set up refresh interval only if authenticated
+          const refreshInterval = setInterval(refreshToken, 55 * 60 * 1000); // 55 minutes
+          return () => clearInterval(refreshInterval);
+        }
+      } catch (error) {
+        if (mounted) {
+          setUser(null);
+          setError("Failed to check auth status");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    checkAuthStatus();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const value = {
-    isLoggedIn,
-    user,
-    loading,
-    login,
-    logout,
-    checkAuth,
-    refreshToken,
+  // Enhanced login function
+  const login = async (credentials) => {
+    setError(null);
+    try {
+      const response = await api.post("/auth/login", credentials);
+      setUser(response.data.user);
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Login failed";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
   };
 
-  // Show spinner while checking auth
+  // Enhanced logout function
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+      setUser(null);
+      setError(null);
+      // Clear any existing intervals
+      if (window.refreshInterval) {
+        clearInterval(window.refreshInterval);
+        window.refreshInterval = null;
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  // Remove console.log from useAuth
+  const value = {
+    user,
+    isAuthenticated,
+    loading,
+    error,
+    signup: async (userData) => {
+      setError(null);
+      try {
+        const response = await api.post("/auth/signup", userData);
+        setUser(response.data.user);
+        return { success: true };
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || "Signup failed";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    },
+    login,
+    logout,
+    setUser,
+    setError,
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen p-4">
@@ -88,3 +124,11 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

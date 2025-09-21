@@ -1,61 +1,65 @@
-import axios from "axios";
-import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
-
-// Auth Context Provider
-import { AuthContext } from "../../context/AuthContext";
-
-// Base API URL
-import { baseURL } from "../../config";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
-  // Context
-  const { setIsLoggedIn } = useContext(AuthContext);
-
-  // State to manage email and password
+  // State management
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // State to manage for showing or hiding password
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State for inline error message
-  const [error, setError] = useState({});
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); // Navigation function
+  // Form validation
+  const validateForm = () => {
+    if (!email.trim()) {
+      setFormError("Email is required.");
+      return false;
+    }
+    if (!password.trim()) {
+      setFormError("Password is required.");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setFormError("Please enter a valid email address.");
+      return false;
+    }
+    return true;
+  };
 
-  // Handler for form submission
+  // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
+    setFormError("");
 
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
 
     try {
-      // Send a POST request to the signup API endpoint
-      const response = await axios.post(
-        `${baseURL}/auth/login`,
-        {
-          email: trimmedEmail,
-          password: trimmedPassword,
-        },
-        { withCredentials: true }
-      );
+      const result = await login({
+        email: email.trim(),
+        password: password.trim(),
+      });
 
-      // If login is successful (HTTP status 200)
-      if (response.status === 200) {
-        setIsLoggedIn(true);
+      if (result.success) {
         toast.success("Logged in successfully!");
-        navigate("/"); // Redirect user to home page
+        navigate("/");
       } else {
-        toast.error("Login failed. Please try again.");
+        setFormError(result.error);
+        toast.error(result.error);
       }
     } catch (error) {
-      // Display backend/general error under form
-      setError({ form: error.response?.data?.message || "Login failed." });
-      console.error("Login error:", error); // Log error for debugging
+      const errorMessage = "An unexpected error occurred. Please try again.";
+      setFormError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -66,13 +70,15 @@ export default function Login() {
           Login to Your Account
         </h2>
 
-        {/* Display backend/general error */}
-        {error.form && (
-          <p className="text-red-500 text-center mb-4">{error.form}</p>
+        {/* Display form error */}
+        {formError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm text-center">{formError}</p>
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email */}
+          {/* Email Field */}
           <div>
             <label
               htmlFor="email"
@@ -85,13 +91,14 @@ export default function Login() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="you@example.com"
               required
+              disabled={isSubmitting}
             />
           </div>
 
-          {/* Password */}
+          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
@@ -105,38 +112,45 @@ export default function Login() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10 transition-colors"
                 placeholder="••••••••"
                 required
+                disabled={isSubmitting}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 cursor-pointer"
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors"
+                disabled={isSubmitting}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
 
-          {/* Button */}
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-500 transition duration-200 cursor-pointer"
+            disabled={isSubmitting}
+            className={`w-full py-2 rounded-lg font-semibold transition duration-200 ${
+              isSubmitting
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            } text-white`}
           >
-            Login
+            {isSubmitting ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        {/* Extra */}
+        {/* Sign up link */}
         <p className="text-center text-sm text-gray-600 mt-6">
-          Don’t have an account?{" "}
-          <a
-            href="/signup"
-            className="text-blue-600 hover:text-blue-500 font-medium"
+          Don't have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-blue-600 hover:text-blue-500 font-medium transition-colors"
           >
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

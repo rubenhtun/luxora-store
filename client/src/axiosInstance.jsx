@@ -26,8 +26,8 @@ api.interceptors.response.use(
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, redirect to home
-        window.location.href = "/";
+        // If refresh fails, redirect to login
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }

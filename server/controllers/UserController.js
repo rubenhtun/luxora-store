@@ -12,6 +12,7 @@ exports.getAuthenticatedUser = async (req, res) => {
   try {
     const userId = req.user.id; // user info set by auth middleware from JWT
     const user = await User.findById(userId).select("-password"); // Exclude password field
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
