@@ -16,9 +16,13 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 
+import { useAuth } from "../../context/AuthContext";
+
 export default function ProfileLayout() {
   // Get the current URL location
   const location = useLocation();
+
+  const { user } = useAuth();
 
   // State to manage sidebar open/close for mobile
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -83,7 +87,6 @@ export default function ProfileLayout() {
   const pageInfo = getPageInfo();
 
   // Get first letter of username
-  const user = JSON.parse(localStorage.getItem("user"));
   const firstLetter = user?.name?.charAt(0).toUpperCase() || "U";
 
   return (
