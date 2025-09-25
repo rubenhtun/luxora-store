@@ -16,12 +16,11 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 
+// Auth context
 import { useAuth } from "../../context/AuthContext";
 
 export default function ProfileLayout() {
-  // Get the current URL location
-  const location = useLocation();
-
+  // Get user data from auth context
   const { user } = useAuth();
 
   // State to manage sidebar open/close for mobile

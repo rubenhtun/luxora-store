@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
+      default: null,
       required: false, // optional at signup
       unique: true,
       sparse: true, // ensures unique works even when field is empty

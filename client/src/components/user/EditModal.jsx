@@ -2,6 +2,8 @@ import React from "react";
 import { FaTimes } from "react-icons/fa";
 
 export default function EditModal({ field, value, onClose, onSave, onChange }) {
+  console.log("EditModal rendered with:", { field, value });
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div className="bg-white rounded-xl shadow-lg w-96 p-6 relative">
